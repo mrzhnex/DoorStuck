@@ -5,19 +5,19 @@ namespace DoorStuck
 {
     public class MainSettings : Plugin
     {
-        public override string getName => "DoorStuck";
-        private HarmonyInstance harmonyInstance;
+        public override string getName => nameof(DoorStuck);
+        public HarmonyInstance HarmonyInstance { get; set; }
         public override void OnEnable()
         {
-            harmonyInstance = HarmonyInstance.Create("slay.with.door.by.innocence");
-            harmonyInstance.PatchAll();
+            HarmonyInstance = HarmonyInstance.Create("slay.with.door.by.innocence");
+            HarmonyInstance.PatchAll();
             Log.Info(getName + " on");
         }
 
         public override void OnDisable()
         {
-            if (harmonyInstance != null)
-                harmonyInstance.UnpatchAll();
+            if (HarmonyInstance != null)
+                HarmonyInstance.UnpatchAll();
             Log.Info(getName + " off");
         }
 

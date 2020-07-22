@@ -3,7 +3,7 @@
 namespace DoorStuck
 {
     [HarmonyPatch(typeof(Door), "ChangeState")]
-    internal class DoorPatch
+    public class DoorPatch
     {
         [HarmonyPrefix]
         public static void Prefix (Door __instance, bool force)
