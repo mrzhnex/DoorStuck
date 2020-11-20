@@ -1,11 +1,11 @@
-﻿using EXILED.Extensions;
+﻿using Exiled.API.Features;
 using UnityEngine;
 
 namespace DoorStuck
 {
     public class DoorAndPlayerTimeCheck : MonoBehaviour
     {
-        private readonly float TimeIsUp = 1.6f;
+        private float TimeIsUp = 0.1f;
         private float Timer = 0.0f;
         private bool IsGate = false;
         private Door Door;
@@ -16,39 +16,65 @@ namespace DoorStuck
             {
                 IsGate = true;
             }
-            if (!Door.DoorName.Contains("173"))
+            if (!IsGate && !Door.DoorName.Contains("173"))
             {
                 foreach (Door door in Map.Doors)
                 {
-                    if (door.DoorName == "173" && Vector3.Distance(Door.gameObject.transform.position, door.gameObject.transform.position) < 20.0f)
+                    if (door.DoorName == "173")
                     {
-                        IsGate = true;
+                        if (Vector3.Distance(Door.gameObject.transform.position, door.gameObject.transform.position) < 20.0f)
+                            IsGate = true;
                         break;
                     }
                 }
             }
             if (!IsGate)
-                Destroy(gameObject.GetComponent<DoorAndPlayerTimeCheck>());
+            {
+                foreach (Door door in Map.Doors)
+                {
+                    if (door.DoorName.ToLower().Contains("049") && door.DoorName.ToLower().Contains("armory") && door.DoorName != Door.DoorName)
+                    {
+                        if (Vector3.Distance(door.gameObject.transform.position, Door.gameObject.transform.position) < 15.0f)
+                            IsGate = true;
+                        break;
+                    }
+                }
+            }
+            if (IsGate)
+                TimeIsUp = 1.6f;
         }
 
         public void Update()
         {
             Timer += Time.deltaTime;
+            
             if (Timer > TimeIsUp)
             {
-                foreach (ReferenceHub p in Player.GetHubs())
+                foreach (Player p in Player.List)
                 {
-                    if (p.GetRole() == RoleType.Spectator || p.GetTeam() == Team.TUT || p.GetRole() == RoleType.Scp079 || p.GetRole() == RoleType.Scp106 || p.GetRole() == RoleType.Scp096)
-                    {
+                    if (!IsGate && p.Team == Team.SCP)
                         continue;
-                    }
-                    if (Vector3.Distance(Door.transform.position, p.GetPosition()) <= Global.distanceGate)
+                    if (p.Role == RoleType.Spectator || p.Team == Team.TUT || p.Role == RoleType.Scp079 || p.Role == RoleType.Scp106)
+                        continue;
+                    if (IsGate)
                     {
-                        if (p.GetTeam() != Team.SCP || p.GetRole() == RoleType.Scp93953 || p.GetRole() == RoleType.Scp93989)
-                            p.gameObject.GetComponent<CharacterClassManager>().RpcPlaceBlood(p.GetPosition(), 2, 3.0f);
-                        p.playerStats.HurtPlayer(new PlayerStats.HitInfo(99999, p.nicknameSync.Network_myNickSync, DamageTypes.Wall, p.GetPlayerId()), p.gameObject);
-                        p.ClearBroadcasts();
-                        p.Broadcast(10, "<color=#ff0000>Вас раздавило гермоворотами</color>", true);
+                        if (Vector3.Distance(Door.transform.position, p.Position) <= Global.DistanceGate)
+                        {
+                            if (p.Team != Team.SCP || p.Role == RoleType.Scp93953 || p.Role == RoleType.Scp93989)
+                                p.GameObject.GetComponent<CharacterClassManager>().RpcPlaceBlood(p.Position, 2, 3.0f);
+                            p.Hurt(999999, p, DamageTypes.Wall);
+                            p.ClearBroadcasts();
+                            p.Broadcast(10, "<color=#ff0000>Вас раздавило гермоворотами</color>", Broadcast.BroadcastFlags.Monospaced);
+                        }
+                    }
+                    else
+                    {
+                        if (Vector3.Distance(Door.transform.position, p.Position) <= Global.Distance)
+                        {
+                            p.Hurt(10, p, DamageTypes.Wall);
+                            p.ClearBroadcasts();
+                            p.Broadcast(10, "<color=#ff0000>Вас прищемило дверью</color>", Broadcast.BroadcastFlags.Monospaced);
+                        }
                     }
                 }
                 Destroy(gameObject.GetComponent<DoorAndPlayerTimeCheck>());

@@ -2,7 +2,7 @@
 {
     public static class Global
     {
-        public static readonly float distance = 1.37f;
-        public static readonly float distanceGate = 1.5f;
+        public static float Distance { get; set; } = 1.4f;
+        public static float DistanceGate { get; set; } = 1.5f;
     }
 }
